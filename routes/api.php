@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImportController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -16,6 +17,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:vendor')->group(function () {
         Route::get('/my/products', [ProductController::class, 'mine']);
+        Route::post('/products/import', [ProductImportController::class, 'store']);
+        Route::get('/product-imports/{import}', [ProductImportController::class, 'show']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
