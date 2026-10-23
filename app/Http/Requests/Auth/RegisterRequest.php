@@ -16,6 +16,8 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => ['required', Rule::enum(Role::class)],
+            'company_name' => ['required_if:role,vendor', 'nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
         ];
     }
 }

@@ -8,12 +8,21 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create($request->validated());
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create($request->safe()->only(['name', 'email', 'password', 'role']));
+
+            if ($user->isVendor()) {
+                $user->vendor()->create($request->safe()->only(['company_name', 'phone']));
+            }
+
+            return $user;
+        });
 
         return response()->json([
             'user' => $user,
@@ -37,7 +46,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        return response()->json($request->user()->load('vendor'));
     }
 
     public function logout(Request $request): JsonResponse

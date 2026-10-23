@@ -19,6 +19,7 @@ class AuthTest extends TestCase
             'password' => 'secret-pass',
             'password_confirmation' => 'secret-pass',
             'role' => 'vendor',
+            'company_name' => 'Asha Traders Pvt Ltd',
         ], $overrides);
     }
 
@@ -28,6 +29,7 @@ class AuthTest extends TestCase
 
         $response->assertCreated()->assertJsonStructure(['user' => ['id', 'email', 'role'], 'token']);
         $this->assertSame(Role::Vendor, User::first()->role);
+        $this->assertDatabaseHas('vendors', ['company_name' => 'Asha Traders Pvt Ltd']);
     }
 
     public function test_register_rejects_unknown_role_and_duplicate_email(): void
@@ -38,6 +40,16 @@ class AuthTest extends TestCase
         User::factory()->create(['email' => 'asha@example.com']);
         $this->postJson('/api/register', $this->payload())
             ->assertUnprocessable()->assertJsonValidationErrors('email');
+    }
+
+    public function test_vendor_registration_needs_a_company_name(): void
+    {
+        $this->postJson('/api/register', $this->payload(['company_name' => null]))
+            ->assertUnprocessable()->assertJsonValidationErrors('company_name');
+
+        $this->postJson('/api/register', $this->payload(['role' => 'buyer', 'company_name' => null]))
+            ->assertCreated();
+        $this->assertDatabaseCount('vendors', 0);
     }
 
     public function test_login_with_valid_and_invalid_credentials(): void
